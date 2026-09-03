@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardbox</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#F1F2F5;
+    --surface:#FFFFFF;
+    --ink:#1B1D22;
+    --ink-soft:rgba(27,29,34,0.6);
+    --ink-faint:rgba(27,29,34,0.38);
+    --line:#E1E3E8;
+    --accent:#2F55FF;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#EAEFFF;
+    --radius:12px;
+    --font:'Roboto Mono', monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font);
+    min-height:100vh;
+    padding:32px 24px 90px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important;}
+  }
+
+  .board{max-width:1180px; margin:0 auto;}
+
+  /* ---------- Header ---------- */
+  .header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .title-block{display:flex; align-items:center; gap:10px;}
+  .title-dot{
+    width:11px; height:11px;
+    background:var(--accent);
+    border-radius:3px;
+    flex:0 0 auto;
+  }
+  .title-block h1{
+    font-family:var(--font);
+    font-weight:700;
+    font-size:1.3rem;
+    margin:0;
+    letter-spacing:-0.02em;
+  }
+  .note-count{font-size:0.78rem; color:var(--ink-faint);}
+
+  .header-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+
+  .search-wrap{position:relative; display:flex; align-items:center;}
+  .search-wrap svg{position:absolute; left:11px; width:14px; height:14px; color:var(--ink-faint); pointer-events:none;}
+  #search{
+    font-family:var(--font);
+    font-size:0.82rem;
+    padding:9px 12px 9px 32px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--surface);
+    color:var(--ink);
+    width:190px;
+    outline:none;
+  }
+  #search:focus{border-color:var(--accent);}
+
+  .new-btn{
+    font-family:var(--font);
+    font-weight:600;
+    font-size:0.82rem;
+    background:var(--accent);
+    color:var(--accent-ink);
+    border:none;
+    border-radius:9px;
+    padding:10px 16px;
+    cursor:pointer;
+  }
+  .new-btn:hover{filter:brightness(1.08);}
+  .new-btn:active{filter:brightness(0.95);}
+
+  /* ---------- Filter row ---------- */
+  .filter-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:24px;
+  }
+  .chip{
+    font-family:var(--font);
+    font-size:0.74rem;
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .chip.active{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
+  .pin-toggle{
+    font-family:var(--font);
+    font-size:0.74rem;
+    padding:6px 12px 6px 9px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-soft);
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+  }
+  .pin-toggle svg{width:11px; height:11px;}
+  .pin-toggle.active{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
+
+  /* ---------- Grid ---------- */
+  .grid{columns:4 250px; column-gap:16px;}
+  @media (max-width:900px){.grid{columns:3 220px;}}
+  @media (max-width:600px){.grid{columns:1;}}
+
+  .card{
+    break-inside:avoid;
+    display:block;
+    width:100%;
+    margin:0 0 16px;
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:15px 16px 11px;
+    border:1px solid var(--line);
+  }
+
+  .card-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    min-height:20px;
+    margin-bottom:6px;
+  }
+  .tag-pill{
+    font-family:var(--font);
+    font-size:0.66rem;
+    font-weight:500;
+    padding:3px 9px;
+    border-radius:999px;
+    background:rgba(0,0,0,0.06);
+    color:inherit;
+  }
+  .tag-pill:empty{display:none;}
+
+  .pin-btn{
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:2px;
+    color:inherit;
+    opacity:0.32;
+    line-height:0;
+    margin-left:auto;
+  }
+  .pin-btn svg{width:15px; height:15px;}
+  .pin-btn.active{opacity:1; color:var(--accent);}
+  .pin-btn:hover{opacity:0.75;}
+
+  .card-title{
+    font-weight:700;
+    outline:none;
+    margin-bottom:5px;
+    line-height:1.35;
+    word-break:break-word;
+    font-family:var(--font);
+  }
+  .card-title[contenteditable]:empty:before{content:attr(data-placeholder); opacity:0.35; font-weight:500;}
+
+  .card-body{
+    outline:none;
+    line-height:1.6;
+    min-height:1.4em;
+    word-break:break-word;
+    white-space:pre-wrap;
+    font-family:var(--font);
+  }
+  .card-body[contenteditable]:empty:before{content:attr(data-placeholder); opacity:0.35;}
+
+  .card-footer{
+    display:flex;
+    justify-content:flex-end;
+    gap:2px;
+    margin-top:9px;
+    opacity:0;
+    transition:opacity 0.12s ease;
+  }
+  .card:hover .card-footer, .card:focus-within .card-footer{opacity:1;}
+  .icon-btn{
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:5px;
+    color:inherit;
+    opacity:0.45;
+    line-height:0;
+    border-radius:6px;
+  }
+  .icon-btn:hover{opacity:1; background:rgba(0,0,0,0.06);}
+  .icon-btn svg{width:14px; height:14px;}
+
+  /* ---------- Customize panel (fixed neutral surface, independent of card color) ---------- */
+  .customize-panel{
+    margin-top:10px;
+    padding:11px;
+    border-radius:9px;
+    background:var(--bg);
+    border:1px solid var(--line);
+  }
+  .customize-panel[hidden]{display:none;}
+  .panel-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+  .panel-row:last-child{margin-bottom:0;}
+
+  .swatch{
+    width:20px; height:20px;
+    border-radius:6px;
+    border:1px solid rgba(0,0,0,0.12);
+    cursor:pointer;
+    padding:0;
+  }
+  .swatch.active{outline:2px solid var(--accent); outline-offset:2px;}
+  .custom-swatch{
+    position:relative;
+    display:inline-block;
+    width:20px; height:20px;
+    border-radius:6px;
+    border:1px solid rgba(0,0,0,0.12);
+    overflow:hidden;
+    cursor:pointer;
+  }
+  .custom-swatch input{
+    position:absolute; top:-4px; left:-4px;
+    width:28px; height:28px;
+    border:none; padding:0; cursor:pointer;
+  }
+
+  .mini-btn{
+    font-family:var(--font);
+    font-size:0.7rem;
+    font-weight:500;
+    padding:5px 9px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .mini-btn.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+
+  .tag-input{
+    font-family:var(--font);
+    font-size:0.74rem;
+    padding:6px 9px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+    width:100%;
+    outline:none;
+  }
+  .tag-input:focus{border-color:var(--accent);}
+
+  .delete-row{display:flex; justify-content:flex-end;}
+  .delete-text-btn{
+    font-family:var(--font);
+    font-size:0.68rem;
+    color:var(--ink-faint);
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  .delete-text-btn:hover{color:#D6432E;}
+
+  .empty-state{
+    text-align:center;
+    padding:80px 20px;
+    color:var(--ink-faint);
+    font-size:0.88rem;
+  }
+  .empty-state span{display:block; font-weight:700; font-size:1.05rem; color:var(--ink-soft); margin-bottom:6px;}
+
+  button:focus-visible, input:focus-visible, [contenteditable]:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="board">
+  <div class="header">
+    <div class="title-block">
+      <span class="title-dot"></span>
+      <h1>Cardbox</h1>
+      <span class="note-count" id="noteCount"></span>
+    </div>
+    <div class="header-actions">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="search" type="text" placeholder="Search notes" autocomplete="off">
+      </div>
+      <button class="new-btn" id="newNoteBtn">Add note</button>
+    </div>
+  </div>
+
+  <div class="filter-row" id="filterRow">
+    <button class="chip active" data-tag="all">All</button>
+    <button class="pin-toggle" id="pinnedOnlyBtn">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.5 5.5L19 9l-5 3.2L15.5 18 12 14.8 8.5 18l1.5-5.8L5 9l5.5-1.5z"/></svg>
+      Pinned
+    </button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty-state" id="emptyState" hidden>
+    <span>Your board is empty</span>
+    Add a note to get started.
+  </div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'cardbox-notes-v2';
+
+  const PALETTE = ['#FFFFFF','#E3ECFF','#DFF6EC','#FFE8DC','#FFF4C7','#F1E6FF','#FFE3ED','#22242B'];
+
+  const SIZES = {
+    sm: { title:'0.95rem', body:'0.82rem' },
+    md: { title:'1.1rem',  body:'0.92rem' },
+    lg: { title:'1.3rem',  body:'1.03rem' }
+  };
+
+  let notes = [];
+  let openPanels = new Set();
+  let searchQuery = '';
+  let activeTag = 'all';
+  let pinnedOnly = false;
+
+  const gridEl = document.getElementById('grid');
+  const emptyEl = document.getElementById('emptyState');
+  const countEl = document.getElementById('noteCount');
+  const filterRow = document.getElementById('filterRow');
+
+  function uid(){ return 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  function luminance(hex){
+    let h = hex.replace('#','');
+    if(h.length === 3) h = h.split('').map(c => c+c).join('');
+    const r = parseInt(h.substr(0,2),16) / 255;
+    const g = parseInt(h.substr(2,2),16) / 255;
+    const b = parseInt(h.substr(4,2),16) / 255;
+    const a = [r,g,b].map(v => v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4));
+    return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2];
+  }
+  function inkFor(hex){ return luminance(hex) < 0.5 ? '#F2F3F6' : '#1B1D22'; }
+
+  // ---------- Persistence: plain localStorage, works on any static host (incl. IIS) ----------
+  function loadNotes(){
+    try{
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      notes = raw ? JSON.parse(raw) : [];
+    }catch(e){
+      console.error('Could not load notes', e);
+      notes = [];
+    }
+    render();
+  }
+  function persist(){
+    try{
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    }catch(e){
+      console.error('Could not save notes', e);
+    }
+  }
+
+  function addNote(){
+    const note = {
+      id: uid(), title:'', body:'', color:'#FFFFFF',
+      size:'md', align:'left',
+      pinned:false, tag:'', createdAt: Date.now()
+    };
+    notes.unshift(note);
+    openPanels.add(note.id);
+    persist();
+    render();
+    requestAnimationFrame(()=>{
+      const el = gridEl.querySelector(`[data-id="${note.id}"] .card-title`);
+      if(el) el.focus();
+    });
+  }
+
+  function deleteNote(id){
+    notes = notes.filter(n => n.id !== id);
+    openPanels.delete(id);
+    persist();
+    render();
+  }
+
+  function getNote(id){ return notes.find(n => n.id === id); }
+
+  function visibleNotes(){
+    let list = notes.slice();
+    if(pinnedOnly) list = list.filter(n => n.pinned);
+    if(activeTag !== 'all') list = list.filter(n => (n.tag||'').toLowerCase() === activeTag);
+    if(searchQuery.trim()){
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(n =>
+        (n.title||'').toLowerCase().includes(q) ||
+        (n.body||'').toLowerCase().includes(q) ||
+        (n.tag||'').toLowerCase().includes(q)
+      );
+    }
+    list.sort((a,b) => (b.pinned - a.pinned) || (b.createdAt - a.createdAt));
+    return list;
+  }
+
+  function uniqueTags(){
+    const set = new Set();
+    notes.forEach(n => { if(n.tag && n.tag.trim()) set.add(n.tag.trim().toLowerCase()); });
+    return Array.from(set).sort();
+  }
+
+  function renderFilterRow(){
+    const tags = uniqueTags();
+    filterRow.querySelectorAll('.chip[data-tag]:not([data-tag="all"])').forEach(el => el.remove());
+    const pinnedBtn = document.getElementById('pinnedOnlyBtn');
+    tags.forEach(tag => {
+      const btn = document.createElement('button');
+      btn.className = 'chip' + (activeTag === tag ? ' active' : '');
+      btn.dataset.tag = tag;
+      btn.textContent = tag;
+      filterRow.insertBefore(btn, pinnedBtn);
+    });
+    filterRow.querySelector('[data-tag="all"]').classList.toggle('active', activeTag === 'all');
+    pinnedBtn.classList.toggle('active', pinnedOnly);
+  }
+
+  function svgIcon(name){
+    if(name === 'pin') return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.5 5.5L19 9l-5 3.2L15.5 18 12 14.8 8.5 18l1.5-5.8L5 9l5.5-1.5z"/></svg>';
+    if(name === 'sliders') return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2" fill="currentColor" stroke="none"/></svg>';
+    if(name === 'trash') return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+    return '';
+  }
+
+  function buildCard(note){
+    const ink = inkFor(note.color);
+    const size = SIZES[note.size] || SIZES.md;
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.id = note.id;
+    card.style.background = note.color;
+    card.style.color = ink;
+    card.style.borderColor = luminance(note.color) < 0.5 ? 'rgba(255,255,255,0.12)' : 'var(--line)';
+
+    const top = document.createElement('div');
+    top.className = 'card-top';
+    const tagPill = document.createElement('span');
+    tagPill.className = 'tag-pill';
+    tagPill.textContent = note.tag || '';
+    const pinBtn = document.createElement('button');
+    pinBtn.className = 'pin-btn' + (note.pinned ? ' active' : '');
+    pinBtn.title = note.pinned ? 'Unpin note' : 'Pin note';
+    pinBtn.setAttribute('aria-pressed', note.pinned ? 'true' : 'false');
+    pinBtn.dataset.action = 'pin';
+    pinBtn.innerHTML = svgIcon('pin');
+    top.appendChild(tagPill);
+    top.appendChild(pinBtn);
+
+    const title = document.createElement('div');
+    title.className = 'card-title';
+    title.contentEditable = 'true';
+    title.dataset.placeholder = 'Untitled';
+    title.dataset.field = 'title';
+    title.style.fontSize = size.title;
+    title.textContent = note.title || '';
+
+    const body = document.createElement('div');
+    body.className = 'card-body';
+    body.contentEditable = 'true';
+    body.dataset.placeholder = 'Write something\u2026';
+    body.dataset.field = 'body';
+    body.style.fontSize = size.body;
+    body.style.textAlign = note.align === 'center' ? 'center' : 'left';
+    body.textContent = note.body || '';
+
+    const footer = document.createElement('div');
+    footer.className = 'card-footer';
+    const customizeBtn = document.createElement('button');
+    customizeBtn.className = 'icon-btn';
+    customizeBtn.title = 'Customize';
+    customizeBtn.dataset.action = 'toggle-panel';
+    customizeBtn.innerHTML = svgIcon('sliders');
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'icon-btn';
+    deleteBtn.title = 'Delete note';
+    deleteBtn.dataset.action = 'delete';
+    deleteBtn.innerHTML = svgIcon('trash');
+    footer.appendChild(customizeBtn);
+    footer.appendChild(deleteBtn);
+
+    card.appendChild(top);
+    card.appendChild(title);
+    card.appendChild(body);
+    card.appendChild(footer);
+
+    const panel = document.createElement('div');
+    panel.className = 'customize-panel';
+    panel.hidden = !openPanels.has(note.id);
+
+    const colorRow = document.createElement('div');
+    colorRow.className = 'panel-row';
+    PALETTE.forEach(c => {
+      const sw = document.createElement('button');
+      sw.className = 'swatch' + (note.color.toLowerCase() === c.toLowerCase() ? ' active' : '');
+      sw.style.background = c;
+      sw.dataset.action = 'set-color';
+      sw.dataset.value = c;
+      sw.setAttribute('aria-label', 'Set note color ' + c);
+      colorRow.appendChild(sw);
+    });
+    const customLabel = document.createElement('label');
+    customLabel.className = 'custom-swatch';
+    customLabel.title = 'Custom color';
+    customLabel.style.background = 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)';
+    const customInput = document.createElement('input');
+    customInput.type = 'color';
+    customInput.value = note.color.length === 7 ? note.color : '#FFFFFF';
+    customInput.dataset.action = 'set-color-custom';
+    customLabel.appendChild(customInput);
+    colorRow.appendChild(customLabel);
+
+    const sizeRow = document.createElement('div');
+    sizeRow.className = 'panel-row';
+    [['sm','S'],['md','M'],['lg','L']].forEach(([key,label]) => {
+      const b = document.createElement('button');
+      b.className = 'mini-btn' + (note.size === key ? ' active' : '');
+      b.dataset.action = 'set-size';
+      b.dataset.value = key;
+      b.textContent = label;
+      sizeRow.appendChild(b);
+    });
+    [['left','Left'],['center','Center']].forEach(([key,label]) => {
+      const b = document.createElement('button');
+      b.className = 'mini-btn' + (note.align === key ? ' active' : '');
+      b.dataset.action = 'set-align';
+      b.dataset.value = key;
+      b.textContent = label;
+      sizeRow.appendChild(b);
+    });
+
+    const tagRow = document.createElement('div');
+    tagRow.className = 'panel-row';
+    const tagInput = document.createElement('input');
+    tagInput.className = 'tag-input';
+    tagInput.type = 'text';
+    tagInput.placeholder = 'Add a tag\u2026';
+    tagInput.value = note.tag || '';
+    tagInput.dataset.field = 'tag';
+    tagRow.appendChild(tagInput);
+
+    const deleteRow = document.createElement('div');
+    deleteRow.className = 'delete-row';
+    const deleteText = document.createElement('button');
+    deleteText.className = 'delete-text-btn';
+    deleteText.dataset.action = 'delete';
+    deleteText.textContent = 'Delete this note';
+    deleteRow.appendChild(deleteText);
+
+    panel.appendChild(colorRow);
+    panel.appendChild(sizeRow);
+    panel.appendChild(tagRow);
+    panel.appendChild(deleteRow);
+    card.appendChild(panel);
+
+    return card;
+  }
+
+  function render(){
+    renderFilterRow();
+    const list = visibleNotes();
+    countEl.textContent = notes.length ? `${notes.length} note${notes.length===1?'':'s'}` : '';
+    gridEl.innerHTML = '';
+    if(list.length === 0){
+      emptyEl.hidden = false;
+      const label = emptyEl.querySelector('span');
+      if(label) label.textContent = notes.length ? 'No notes match' : 'Your board is empty';
+    } else {
+      emptyEl.hidden = true;
+      const frag = document.createDocumentFragment();
+      list.forEach(n => frag.appendChild(buildCard(n)));
+      gridEl.appendChild(frag);
+    }
+  }
+
+  gridEl.addEventListener('click', (e) => {
+    const actionEl = e.target.closest('[data-action]');
+    if(!actionEl) return;
+    const cardEl = e.target.closest('.card');
+    const id = cardEl && cardEl.dataset.id;
+    const note = id && getNote(id);
+    const action = actionEl.dataset.action;
+
+    if(action === 'pin' && note){
+      note.pinned = !note.pinned;
+      persist(); render();
+    } else if(action === 'toggle-panel' && id){
+      if(openPanels.has(id)) openPanels.delete(id); else openPanels.add(id);
+      render();
+    } else if(action === 'delete' && id){
+      deleteNote(id);
+    } else if(action === 'set-color' && note){
+      note.color = actionEl.dataset.value;
+      persist(); render();
+    } else if(action === 'set-size' && note){
+      note.size = actionEl.dataset.value;
+      persist(); render();
+    } else if(action === 'set-align' && note){
+      note.align = actionEl.dataset.value;
+      persist(); render();
+    }
+  });
+
+  gridEl.addEventListener('input', (e) => {
+    const cardEl = e.target.closest('.card');
+    if(!cardEl) return;
+    const note = getNote(cardEl.dataset.id);
+    if(!note) return;
+
+    if(e.target.dataset.field === 'title'){
+      note.title = e.target.innerText;
+      persist();
+    } else if(e.target.dataset.field === 'body'){
+      note.body = e.target.innerText;
+      persist();
+    } else if(e.target.dataset.field === 'tag'){
+      note.tag = e.target.value;
+      persist();
+    } else if(e.target.dataset.action === 'set-color-custom'){
+      note.color = e.target.value;
+      cardEl.style.background = note.color;
+      cardEl.style.color = inkFor(note.color);
+      persist();
+    }
+  });
+
+  gridEl.addEventListener('blur', (e) => {
+    if(!e.target.matches('[contenteditable]')) return;
+    if(e.target.innerText.trim() === '') e.target.innerHTML = '';
+  }, true);
+
+  gridEl.addEventListener('change', (e) => {
+    if(e.target.dataset.action === 'set-color-custom'){
+      persist();
+      render();
+    }
+  });
+
+  filterRow.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if(chip){ activeTag = chip.dataset.tag; render(); return; }
+    const pinBtn = e.target.closest('#pinnedOnlyBtn');
+    if(pinBtn){ pinnedOnly = !pinnedOnly; render(); }
+  });
+
+  document.getElementById('search').addEventListener('input', (e) => {
+    searchQuery = e.target.value;
+    render();
+  });
+
+  document.getElementById('newNoteBtn').addEventListener('click', addNote);
+
+  loadNotes();
+})();
+</script>
+</body>
+</html>
